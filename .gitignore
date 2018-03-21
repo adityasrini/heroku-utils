@@ -1,0 +1,6 @@
+# Ignore these IDEA generated files
+.idea/*
+*.iml
+.target/*
+out/*
+lib/*
