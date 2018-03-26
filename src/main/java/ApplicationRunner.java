@@ -33,7 +33,8 @@ public class ApplicationRunner
 
 	private void herokuCLIOperations()
 	{
-		System.out.println("\nSelect a heroku operation from the following. Type \"exit\" at any time to quit:");
+		System.out.println("\nSelect a heroku operation to perform on " + HerokuCLIOperations.appName +
+						   ". Type \"exit\" at any time to quit:");
 		System.out.println("1. To see Postgres database information, type \"info\"" +
 						   "\n2. To see Postgres credentials, type \"credentials\"" +
 						   "\n3. To get a local copy of " + HerokuCLIOperations.appName + "\'s database, type \"pull\"" +

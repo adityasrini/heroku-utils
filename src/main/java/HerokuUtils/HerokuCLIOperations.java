@@ -3,6 +3,7 @@ package main.java.HerokuUtils;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.sql.DriverManager;
 import java.util.List;
 import java.util.Scanner;
 import java.util.stream.Collectors;
@@ -12,6 +13,7 @@ public class HerokuCLIOperations
 
 	public static String appName;
 	private static String dbAlias;
+	private static String localDbName;
 	private static List<String> pgInfo;
 	private static List<String> pgCredentials;
 	public static void herokuApps()
@@ -138,15 +140,33 @@ public class HerokuCLIOperations
 	public static void herokuPgPush()
 	{
 
-		System.out.println("Enter the name of the app you want Postgres credentials information from: ");
-		var appName = new Scanner(System.in).nextLine();
+		System.out.println("Enter the name of your local database that your want to upload");
+		localDbName = new Scanner(System.in).nextLine();
 		try
 		{
-			var process = new ProcessBuilder("heroku", "pg:credentials:url", dbAlias, "-a",
-											 appName).redirectErrorStream(true)
-													 .start();
-			new BufferedReader(new InputStreamReader(process.getInputStream())).lines()
-																			   .forEach(System.out::println);
+			Class.forName("org.postgresql.Driver");
+			DriverManager.getConnection("jdbc:postgresql://localhost:5432/" + localDbName);
+		}
+		catch (Exception e)
+		{ 
+			System.out.println("An error occurred. Perhaps you entered an incorrect local database name.");
+
+			herokuPgPush();
+		}
+		try
+		{
+			new ProcessBuilder("heroku", "pg:reset", dbAlias, "-a",
+							   appName, "--confirm", appName).redirectErrorStream(true)
+															 .start()
+															 .getInputStream()
+															 .readAllBytes();
+
+			new ProcessBuilder("heroku", "pg:push", localDbName, dbAlias, "-a",
+							   appName).redirectErrorStream(true)
+									   .start()
+									   .getInputStream()
+									   .readAllBytes();
+			System.out.println("Successfully uploaded your database " + localDbName + " to the master!");
 		}
 		catch (IOException e)
 		{
