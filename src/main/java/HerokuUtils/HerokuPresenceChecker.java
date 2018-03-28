@@ -1,3 +1,8 @@
+/**
+ * This class checks the local machine to see if heroku is present in the first place before running. It asks the user if
+ * they would like to install heroku (unix and unix-like OS's) or directs the user to a link (windows) if heroku is not present.
+ */
+
 package main.java.HerokuUtils;
 
 import java.io.BufferedReader;
@@ -8,10 +13,21 @@ import java.nio.file.Paths;
 import java.util.Scanner;
 import java.util.stream.Collectors;
 
-public class InstallUtils
+public class HerokuPresenceChecker
 {
 
-	public static boolean checkToSeeIfHerokuIsInstalled()
+	/**
+	 * This is the main logic of the class that relies on the other static helper methods to execute a check or install.
+	 */
+	public static void checkHerokuPresenceOrInstall()
+	{
+		if (!checkToSeeIfHerokuIsInstalled())
+		{
+			askIfUserWantsToInstallHeroku();
+		}
+	}
+
+	private static boolean checkToSeeIfHerokuIsInstalled()
 	{
 		try
 		{
@@ -28,7 +44,7 @@ public class InstallUtils
 
 	}
 
-	public static void askIfUserWantsToInstallHeroku()
+	private static void askIfUserWantsToInstallHeroku()
 	{
 		System.out.println("It appears that heroku is not installed on this machine.");
 		if (System.getProperty("os.name")

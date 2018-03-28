@@ -1,7 +1,7 @@
 package main.test;
 
+import main.java.HerokuUtils.HerokuCLIOperations;
 import org.junit.jupiter.api.Test;
-import static main.java.HerokuUtils.HerokuCLIOperations.herokuApps;
 
 class ApplicationTester
 {
@@ -10,7 +10,9 @@ class ApplicationTester
 	void applicationShouldReturnHerokuAppsList()
 	{
 
-		herokuApps();
+		HerokuCLIOperations herokuCLIOperations = new HerokuCLIOperations();
+		
 		
 	}
+	
 }

@@ -3,20 +3,40 @@ package main.java.HerokuUtils;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.sql.DriverManager;
 import java.util.List;
 import java.util.Scanner;
 import java.util.stream.Collectors;
 
+import static main.java.HerokuUtils.PostgresOperations.PGOperations.*;
+
 public class HerokuCLIOperations
 {
 
-	public static String appName;
-	private static String dbAlias;
-	private static String localDbName;
-	private static List<String> pgInfo;
-	private static List<String> pgCredentials;
-	public static void herokuApps()
+	private String optionSelected;
+	public String appName;
+	public String dbAlias;
+	public String localDbName;
+	public List<String> pgInfo;
+	public List<String> pgCredentials;
+
+	public HerokuCLIOperations()
+	{
+		System.out.println("\n*****WELCOME!*****\n");
+		this.optionSelected = "y";
+	}
+
+	public void runApp()
+	{
+		herokuApps();
+
+		while (optionSelected.equalsIgnoreCase("y"))
+		{
+			herokuCLIOperations();
+		}
+
+	}
+
+	private void herokuApps()
 	{
 		try
 		{
@@ -41,7 +61,87 @@ public class HerokuCLIOperations
 		}
 	}
 
-	private static void validateAppAndCacheInfo()
+	private void herokuCLIOperations()
+	{
+		System.out.println("\nSelect a heroku operation to perform on " + this.appName +
+						   ". Type \"exit\" at any time to quit:");
+		System.out.println("1 - View Postgres database information" +
+						   "\n2 - View Postgres credentials" +
+						   "\n3 - Download the remote database from " + this.appName +
+						   "\n4 - Upload a local database to heroku (Warning: This will delete and replace the remote database with your database!)" +
+						   "\n5 - More options");
+		optionSelected = new Scanner(System.in).nextLine();
+		if (optionSelected.equalsIgnoreCase("5"))
+		{
+			System.out.println(
+					"\n6 - Change the selected app from " + this.appName +
+					" and list apps under your username" +
+					"\n7 - Reset the remote database (Warning: This will delete and create an empty remote database!)" +
+					"\n8 - View or terminate any running queries" +
+					"\n9 - Go back to the previous menu");
+			optionSelected = new Scanner(System.in).nextLine();
+		}
+
+
+		switch (optionSelected)
+		{
+
+			case "1":
+				herokuPgInfo(this);
+				break;
+			case "2":
+				herokuPgCredentials(this);
+				break;
+			case "3":
+				herokuPgPull(this);
+				break;
+			case "4":
+				herokuPgPush(this);
+				break;
+			case "6":
+				herokuApps();
+				herokuCLIOperations();
+				break;
+			case "7":
+				herokuPgReset();
+				break;
+			case "8":
+				herokuPgQuery();
+				break;
+			case "9":
+				herokuCLIOperations();
+				break;
+			case "exit":
+				System.out.println("Goodbye!");
+				System.exit(0);
+				break;
+		}
+		doesUserWantToContinue();
+
+	}
+
+	private void doesUserWantToContinue()
+	{
+		while (true)
+		{
+			System.out.println("\nWould you like to perform more operations? Type 'y' for yes or 'n' to exit");
+			optionSelected = new Scanner(System.in).nextLine();
+			switch (optionSelected.toLowerCase())
+			{
+				case "y":
+					return;
+				case "n":
+					System.out.println("Goodbye!");
+					System.exit(0);
+					return;
+				default:
+					System.err.println("Please enter a valid option!");
+			}
+		}
+	}
+
+
+	private void validateAppAndCacheInfo()
 	{
 		try
 		{
@@ -54,9 +154,9 @@ public class HerokuCLIOperations
 																									Collectors.toList());
 
 			if (pgInfo.stream()
-					  .anyMatch(s -> s.contains("Expected response to be successful, got 4")))
+					  .noneMatch(s -> s.contains("=== ")))
 			{
-				System.out.println("Sorry you've entered a wrong app name. Please try again!");
+				System.out.println("Sorry you've entered a wrong app name or there is no Postgres information for this app. Please try again!");
 				herokuApps();
 				validateAppAndCacheInfo();
 			}
@@ -76,101 +176,5 @@ public class HerokuCLIOperations
 		}
 	}
 
-	public static void herokuPgInfo()
-	{
-		if (pgInfo != null)
-		{
-			pgInfo.forEach(System.out::println);
-			return;
-		}
-		try
-		{
-			var process = new ProcessBuilder("heroku", "pg:info", "-a", appName).redirectErrorStream(true)
-																				.start();
-			new BufferedReader(new InputStreamReader(process.getInputStream())).lines()
-																			   .forEach(
-																					   System.out::println);
-		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
-		}
-	}
 
-	public static void herokuPgCredentials()
-	{
-		if (pgCredentials != null)
-		{
-			pgCredentials.forEach(System.out::println);
-			return;
-		}
-		try
-		{
-
-			var process = new ProcessBuilder("heroku", "pg:credentials:url", dbAlias, "-a",
-											 appName).redirectErrorStream(true)
-													 .start();
-			new BufferedReader(new InputStreamReader(process.getInputStream())).lines()
-																			   .forEach(System.out::println);
-		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
-		}
-	}
-
-	public static void herokuPgPull()
-	{
-
-		System.out.println("Enter the name of the app you want Postgres credentials information from: ");
-		var appName = new Scanner(System.in).nextLine();
-		try
-		{
-			var process = new ProcessBuilder("heroku", "pg:pull", "-a", appName).redirectErrorStream(true)
-																				.start();
-			new BufferedReader(new InputStreamReader(process.getInputStream())).lines()
-																			   .forEach(System.out::println);
-		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
-		}
-	}
-
-	public static void herokuPgPush()
-	{
-
-		System.out.println("Enter the name of your local database that your want to upload");
-		localDbName = new Scanner(System.in).nextLine();
-		try
-		{
-			Class.forName("org.postgresql.Driver");
-			DriverManager.getConnection("jdbc:postgresql://localhost:5432/" + localDbName);
-		}
-		catch (Exception e)
-		{ 
-			System.out.println("An error occurred. Perhaps you entered an incorrect local database name.");
-
-			herokuPgPush();
-		}
-		try
-		{
-			new ProcessBuilder("heroku", "pg:reset", dbAlias, "-a",
-							   appName, "--confirm", appName).redirectErrorStream(true)
-															 .start()
-															 .getInputStream()
-															 .readAllBytes();
-
-			new ProcessBuilder("heroku", "pg:push", localDbName, dbAlias, "-a",
-							   appName).redirectErrorStream(true)
-									   .start()
-									   .getInputStream()
-									   .readAllBytes();
-			System.out.println("Successfully uploaded your database " + localDbName + " to the master!");
-		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
-		}
-	}
 }
