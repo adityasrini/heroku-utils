@@ -5,7 +5,6 @@ import main.java.HerokuUtils.HerokuPresenceChecker;
 
 public class ApplicationRunner
 {
- 
 	
 	public static void main(String[] args)
 	{
@@ -15,7 +14,5 @@ public class ApplicationRunner
 
 		herokuCLIOperations.runApp();
 	}
-
-	
 	
 }

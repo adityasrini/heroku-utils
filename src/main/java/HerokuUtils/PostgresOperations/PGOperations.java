@@ -6,22 +6,23 @@ import java.io.InputStreamReader;
 import java.sql.DriverManager;
 import java.util.Scanner;
 
-import main.java.HerokuUtils.HerokuCLIOperations;
+import main.java.HerokuBean;
 
 public class PGOperations
 {
 
-	public static void herokuPgInfo(HerokuCLIOperations herokuCLIOperations)
+	public static void herokuPgInfo(HerokuBean herokuBean)
 	{
-		if (herokuCLIOperations.pgInfo != null)
+		if (herokuBean.getPgInfo() != null)
 		{
-			herokuCLIOperations.pgInfo.forEach(System.out::println);
+			herokuBean.getPgInfo()
+					  .forEach(System.out::println);
 			return;
 		}
 		try
 		{
 			var process = new ProcessBuilder("heroku", "pg:info", "-a",
-											 herokuCLIOperations.appName).redirectErrorStream(true)
+											 herokuBean.getAppName()).redirectErrorStream(true)
 																		 .start();
 			new BufferedReader(new InputStreamReader(process.getInputStream())).lines()
 																			   .forEach(
@@ -33,18 +34,19 @@ public class PGOperations
 		}
 	}
 
-	public static void herokuPgCredentials(HerokuCLIOperations herokuCLIOperations)
+	public static void herokuPgCredentials(HerokuBean herokuBean)
 	{
-		if (herokuCLIOperations.pgCredentials != null)
+		if (herokuBean.getPgCredentials() != null)
 		{
-			herokuCLIOperations.pgCredentials.forEach(System.out::println);
+			herokuBean.getPgCredentials()
+					  .forEach(System.out::println);
 			return;
 		}
 		try
 		{
 
-			var process = new ProcessBuilder("heroku", "pg:credentials:url", herokuCLIOperations.dbAlias, "-a",
-											 herokuCLIOperations.appName).redirectErrorStream(true)
+			var process = new ProcessBuilder("heroku", "pg:credentials:url", herokuBean.getDbAlias(), "-a",
+											 herokuBean.getAppName()).redirectErrorStream(true)
 																		 .start();
 			new BufferedReader(new InputStreamReader(process.getInputStream())).lines()
 																			   .forEach(System.out::println);
@@ -55,33 +57,33 @@ public class PGOperations
 		}
 	}
 
-	public static void herokuPgPull(HerokuCLIOperations herokuCLIOperations)
+	public static void herokuPgPull(HerokuBean herokuBean)
 	{
 
 		System.out.println("Enter the name of an existing local database that you want heroku to download into");
-		herokuCLIOperations.localDbName = new Scanner(System.in).nextLine();
+		herokuBean.setLocalDbName(new Scanner(System.in).nextLine());
 		try
 		{
 			Class.forName("org.postgresql.Driver");
-			DriverManager.getConnection("jdbc:postgresql://localhost:5432/" + herokuCLIOperations.localDbName);
+			DriverManager.getConnection("jdbc:postgresql://localhost:5432/" + herokuBean.getLocalDbName());
 		}
 		catch (Exception e)
 		{
 			System.out.println("An error occurred. Perhaps the database hasn't been created yet.");
 
-			herokuPgPull(herokuCLIOperations);
+			herokuPgPull(herokuBean);
 		}
 
 		try
 		{
-			var process = new ProcessBuilder("heroku", "pg:pull", herokuCLIOperations.dbAlias,
-											 herokuCLIOperations.localDbName, "-a",
-											 herokuCLIOperations.appName).redirectErrorStream(true)
+			var process = new ProcessBuilder("heroku", "pg:pull", herokuBean.getDbAlias(),
+											 herokuBean.getLocalDbName(), "-a",
+											 herokuBean.getAppName()).redirectErrorStream(true)
 																		 .start();
 			new BufferedReader(new InputStreamReader(process.getInputStream())).lines()
 																			   .forEach(System.out::println);
 			System.out.println(
-					"Successfully downloaded the remote database from " + herokuCLIOperations.localDbName +
+					"Successfully downloaded the remote database from " + herokuBean.getLocalDbName() +
 					" to your local database!");
 		}
 		catch (IOException e)
@@ -90,21 +92,21 @@ public class PGOperations
 		}
 	}
 
-	public static void herokuPgPush(HerokuCLIOperations herokuCLIOperations)
+	public static void herokuPgPush(HerokuBean herokuBean)
 	{
 
 		System.out.println("Enter the name of your local database that your want to upload to the remote");
-		herokuCLIOperations.localDbName = new Scanner(System.in).nextLine();
+		herokuBean.setLocalDbName(new Scanner(System.in).nextLine());
 		try
 		{
 			Class.forName("org.postgresql.Driver");
-			DriverManager.getConnection("jdbc:postgresql://localhost:5432/" + herokuCLIOperations.localDbName);
+			DriverManager.getConnection("jdbc:postgresql://localhost:5432/" + herokuBean.getLocalDbName());
 		}
 		catch (Exception e)
 		{
 			System.out.println("An error occurred. Perhaps you entered an incorrect local database name.");
 
-			herokuPgPush(herokuCLIOperations);
+			herokuPgPush(herokuBean);
 		}
 		System.out.println(
 				"Warning this will wipe out data from the remote database and replace it with yours! Type \"confirm\" to proceed with this!");
@@ -117,21 +119,21 @@ public class PGOperations
 		try
 		{
 			new BufferedReader(new InputStreamReader(
-					new ProcessBuilder("heroku", "pg:reset", herokuCLIOperations.dbAlias, "-a",
-									   herokuCLIOperations.appName, "--" + confirm,
-									   herokuCLIOperations.appName).redirectErrorStream(true)
+					new ProcessBuilder("heroku", "pg:reset", herokuBean.getDbAlias(), "-a",
+									   herokuBean.getAppName(), "--" + confirm,
+									   herokuBean.getAppName()).redirectErrorStream(true)
 																   .start()
 																   .getInputStream())).lines()
 																					  .forEach(System.out::println);
 			new BufferedReader(new InputStreamReader(
-					new ProcessBuilder("heroku", "pg:push", herokuCLIOperations.localDbName,
-									   herokuCLIOperations.dbAlias, "-a",
-									   herokuCLIOperations.appName).redirectErrorStream(true)
+					new ProcessBuilder("heroku", "pg:push", herokuBean.getLocalDbName(),
+									   herokuBean.getDbAlias(), "-a",
+									   herokuBean.getAppName()).redirectErrorStream(true)
 																   .start()
 																   .getInputStream())).lines()
 																					  .forEach(System.out::println);
 			System.out.println(
-					"Successfully uploaded your database " + herokuCLIOperations.localDbName + " to the master!");
+					"Successfully uploaded your database " + herokuBean.getLocalDbName() + " to the master!");
 		}
 		catch (IOException e)
 		{

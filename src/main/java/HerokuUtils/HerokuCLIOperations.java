@@ -3,21 +3,17 @@ package main.java.HerokuUtils;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.List;
 import java.util.Scanner;
 import java.util.stream.Collectors;
 
+import main.java.HerokuBean;
 import static main.java.HerokuUtils.PostgresOperations.PGOperations.*;
 
 public class HerokuCLIOperations
 {
 
 	private String optionSelected;
-	public String appName;
-	public String dbAlias;
-	public String localDbName;
-	public List<String> pgInfo;
-	public List<String> pgCredentials;
+	private HerokuBean herokuBean;
 
 	public HerokuCLIOperations()
 	{
@@ -27,7 +23,7 @@ public class HerokuCLIOperations
 
 	public void runApp()
 	{
-		herokuApps();
+		herokuBean = herokuApps();
 
 		while (optionSelected.equalsIgnoreCase("y"))
 		{
@@ -36,8 +32,9 @@ public class HerokuCLIOperations
 
 	}
 
-	private void herokuApps()
+	private HerokuBean herokuApps()
 	{
+		var herokuBean = new HerokuBean();
 		try
 		{
 			System.out.println("Here are the apps under your username:\n");
@@ -46,35 +43,39 @@ public class HerokuCLIOperations
 			new BufferedReader(new InputStreamReader(process.getInputStream())).lines()
 																			   .forEach(System.out::println);
 			System.out.println("Which app would you like to perform operations on? Type \"exit\" at anytime to quit:");
-			appName = new Scanner(System.in).nextLine();
-			System.out.println("***Waiting for heroku***");
-			validateAppAndCacheInfo();
-			if (appName.equalsIgnoreCase("exit"))
+			herokuBean.setAppName(new Scanner(System.in).nextLine());
+
+			if (herokuBean.getAppName()
+						  .equalsIgnoreCase("exit"))
 			{
 				System.out.println("Goodbye!");
-				System.exit(0);
+				optionSelected = "not Y";
+				return null;
 			}
+			System.out.println("***Waiting for heroku***");
+			validateAppAndCacheInfo(herokuBean);
 		}
 		catch (IOException e)
 		{
 			e.printStackTrace();
 		}
+		return herokuBean;
 	}
 
 	private void herokuCLIOperations()
 	{
-		System.out.println("\nSelect a heroku operation to perform on " + this.appName +
+		System.out.println("\nSelect an option from the list. The app name is " + herokuBean.getAppName() +
 						   ". Type \"exit\" at any time to quit:");
 		System.out.println("1 - View Postgres database information" +
 						   "\n2 - View Postgres credentials" +
-						   "\n3 - Download the remote database from " + this.appName +
+						   "\n3 - Download the remote database" +
 						   "\n4 - Upload a local database to heroku (Warning: This will delete and replace the remote database with your database!)" +
 						   "\n5 - More options");
 		optionSelected = new Scanner(System.in).nextLine();
 		if (optionSelected.equalsIgnoreCase("5"))
 		{
 			System.out.println(
-					"\n6 - Change the selected app from " + this.appName +
+					"\n6 - Change the selected app from " + herokuBean.getAppName() +
 					" and list apps under your username" +
 					"\n7 - Reset the remote database (Warning: This will delete and create an empty remote database!)" +
 					"\n8 - View or terminate any running queries" +
@@ -82,24 +83,23 @@ public class HerokuCLIOperations
 			optionSelected = new Scanner(System.in).nextLine();
 		}
 
-
 		switch (optionSelected)
 		{
 
 			case "1":
-				herokuPgInfo(this);
+				herokuPgInfo(herokuBean);
 				break;
 			case "2":
-				herokuPgCredentials(this);
+				herokuPgCredentials(herokuBean);
 				break;
 			case "3":
-				herokuPgPull(this);
+				herokuPgPull(herokuBean);
 				break;
 			case "4":
-				herokuPgPush(this);
+				herokuPgPush(herokuBean);
 				break;
 			case "6":
-				herokuApps();
+				herokuBean = herokuApps();
 				herokuCLIOperations();
 				break;
 			case "7":
@@ -113,8 +113,11 @@ public class HerokuCLIOperations
 				break;
 			case "exit":
 				System.out.println("Goodbye!");
-				System.exit(0);
-				break;
+				optionSelected = "not Y";
+				return;
+			default:
+				System.out.println("You've entered an option that's not in the list. Let's try this again!");
+				herokuCLIOperations();
 		}
 		doesUserWantToContinue();
 
@@ -122,52 +125,57 @@ public class HerokuCLIOperations
 
 	private void doesUserWantToContinue()
 	{
-		while (true)
+		System.out.println("\nWould you like to perform more operations? Type 'y' for yes or 'n' to exit");
+		optionSelected = new Scanner(System.in).nextLine();
+		switch (optionSelected.toLowerCase())
 		{
-			System.out.println("\nWould you like to perform more operations? Type 'y' for yes or 'n' to exit");
-			optionSelected = new Scanner(System.in).nextLine();
-			switch (optionSelected.toLowerCase())
-			{
-				case "y":
-					return;
-				case "n":
-					System.out.println("Goodbye!");
-					System.exit(0);
-					return;
-				default:
-					System.err.println("Please enter a valid option!");
-			}
+			case "y":
+				return;
+			case "n":
+				System.out.println("Goodbye!");
+				optionSelected = "not Y";
+				return;
+			default:
+				System.err.println("Please enter a valid option!");
+				doesUserWantToContinue();
 		}
+		
 	}
 
 
-	private void validateAppAndCacheInfo()
+	private void validateAppAndCacheInfo(HerokuBean herokuBean)
 	{
 		try
 		{
-			var processInfo = new ProcessBuilder("heroku", "pg:info", "-a", appName).redirectErrorStream(true)
-																					.start();
+			var processInfo = new ProcessBuilder("heroku", "pg:info", "-a",
+												 herokuBean.getAppName()).redirectErrorStream(
+					true)
+																		 .start();
 
 
-			pgInfo = new BufferedReader(new InputStreamReader(processInfo.getInputStream())).lines()
-																							.collect(
-																									Collectors.toList());
+			herokuBean.setPgInfo(new BufferedReader(new InputStreamReader(processInfo.getInputStream())).lines()
+																										.collect(
+																												Collectors.toList()));
 
-			if (pgInfo.stream()
-					  .noneMatch(s -> s.contains("=== ")))
+			if (herokuBean.getPgInfo()
+						  .stream()
+						  .noneMatch(s -> s.contains("=== ")))
 			{
 				System.out.println("Sorry you've entered a wrong app name or there is no Postgres information for this app. Please try again!");
-				herokuApps();
-				validateAppAndCacheInfo();
+				herokuBean = herokuApps();
+				assert herokuBean != null;
+				validateAppAndCacheInfo(herokuBean);
 			}
-			dbAlias = pgInfo.get(0)
-							.replace("=== ", "");
-			var processCreds = new ProcessBuilder("heroku", "pg:credentials:url", dbAlias, "-a",
-												  appName).redirectErrorStream(true)
-														  .start();
-			pgCredentials = new BufferedReader(new InputStreamReader(processCreds.getInputStream())).lines()
-																									.collect(
-																											Collectors.toList());
+			herokuBean.setDbAlias(herokuBean.getPgInfo()
+											.get(0)
+											.replace("=== ", ""));
+			var processCredentials = new ProcessBuilder("heroku", "pg:credentials:url", herokuBean.getDbAlias(), "-a",
+														herokuBean.getAppName()).redirectErrorStream(true)
+																				.start();
+			herokuBean.setPgCredentials(
+					new BufferedReader(new InputStreamReader(processCredentials.getInputStream())).lines()
+																								  .collect(
+																										  Collectors.toList()));
 
 		}
 		catch (IOException e)
