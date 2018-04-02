@@ -60,19 +60,8 @@ public class PGOperations
 	public static void herokuPgPull(HerokuBean herokuBean)
 	{
 
-		System.out.println("Enter the name of an existing local database that you want heroku to download into");
+		System.out.println("Enter the name of a local database that you want heroku to create and download data into");
 		herokuBean.setLocalDbName(new Scanner(System.in).nextLine());
-		try
-		{
-			Class.forName("org.postgresql.Driver");
-			DriverManager.getConnection("jdbc:postgresql://localhost:5432/" + herokuBean.getLocalDbName());
-		}
-		catch (Exception e)
-		{
-			System.out.println("An error occurred. Perhaps the database hasn't been created yet.");
-
-			herokuPgPull(herokuBean);
-		}
 
 		try
 		{
