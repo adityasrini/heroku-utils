@@ -1,4 +1,4 @@
-package main.java.HerokuUtils;
+package CLI_Module.HerokuUtils;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -6,8 +6,8 @@ import java.io.InputStreamReader;
 import java.util.Scanner;
 import java.util.stream.Collectors;
 
-import main.java.HerokuBean;
-import static main.java.HerokuUtils.PostgresOperations.PGOperations.*;
+import CLI_Module.HerokuBean;
+import CLI_Module.HerokuUtils.PostgresOperations.PGOperations;
 
 public class HerokuCLIOperations
 {
@@ -87,26 +87,26 @@ public class HerokuCLIOperations
 		{
 
 			case "1":
-				herokuPgInfo(herokuBean);
+				PGOperations.herokuPgInfo(herokuBean);
 				break;
 			case "2":
-				herokuPgCredentials(herokuBean);
+				PGOperations.herokuPgCredentials(herokuBean);
 				break;
 			case "3":
-				herokuPgPull(herokuBean);
+				PGOperations.herokuPgPull(herokuBean);
 				break;
 			case "4":
-				herokuPgPush(herokuBean);
+				PGOperations.herokuPgPush(herokuBean);
 				break;
 			case "6":
 				herokuBean = herokuApps();
 				herokuCLIOperations();
 				break;
 			case "7":
-				herokuPgReset();
+				PGOperations.herokuPgReset();
 				break;
 			case "8":
-				herokuPgQuery();
+				PGOperations.herokuPgQuery();
 				break;
 			case "9":
 				herokuCLIOperations();

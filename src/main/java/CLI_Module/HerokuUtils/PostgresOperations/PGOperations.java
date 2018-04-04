@@ -1,12 +1,12 @@
-package main.java.HerokuUtils.PostgresOperations;
+package CLI_Module.HerokuUtils.PostgresOperations;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.sql.DriverManager;
 import java.util.Scanner;
 
-import main.java.HerokuBean;
+import CLI_Module.HerokuBean;
+import org.postgresql.ds.PGSimpleDataSource;
 
 public class PGOperations
 {
@@ -88,8 +88,12 @@ public class PGOperations
 		herokuBean.setLocalDbName(new Scanner(System.in).nextLine());
 		try
 		{
-			Class.forName("org.postgresql.Driver");
-			DriverManager.getConnection("jdbc:postgresql://localhost:5432/" + herokuBean.getLocalDbName());
+			var dataSource = new PGSimpleDataSource();
+			dataSource.setUser("postgres");
+			dataSource.setPassword("");
+			dataSource.setPortNumber(5432);
+			dataSource.setDatabaseName(herokuBean.getLocalDbName());
+			dataSource.getConnection();
 		}
 		catch (Exception e)
 		{

@@ -1,9 +1,7 @@
-package main.test;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 
-import main.java.HerokuUtils.HerokuCLIOperations;
+import CLI_Module.HerokuUtils.HerokuCLIOperations;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertTrue;

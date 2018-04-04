@@ -3,7 +3,7 @@
  * they would like to install heroku (unix and unix-like OS's) or directs the user to a link (windows) if heroku is not present.
  */
 
-package main.java.HerokuUtils;
+package CLI_Module.HerokuUtils;
 
 import java.io.BufferedReader;
 import java.io.IOException;

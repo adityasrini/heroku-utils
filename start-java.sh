@@ -1,3 +1,3 @@
 # starts the java app
-cd out/production/heroku-utils/
+cd target/classes/
 java main.java.ApplicationRunner

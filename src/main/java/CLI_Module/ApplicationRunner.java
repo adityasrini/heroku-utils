@@ -1,7 +1,7 @@
-package main.java;
+package CLI_Module;
 
-import main.java.HerokuUtils.HerokuCLIOperations;
-import main.java.HerokuUtils.HerokuPresenceChecker;
+import CLI_Module.HerokuUtils.HerokuCLIOperations;
+import CLI_Module.HerokuUtils.HerokuPresenceChecker;
 
 public class ApplicationRunner
 {
